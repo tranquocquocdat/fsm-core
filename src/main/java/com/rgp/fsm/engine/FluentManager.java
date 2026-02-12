@@ -26,13 +26,16 @@ public class FluentManager<S, E> {
 
         var ctx = new TransitionContext<>(aggregateId, version, currentState, event, params);
 
-        // 2. Guard Check
+        // 2. Guard Check (Luồng)
         if (transition.guard() != null && !transition.guard().test(ctx)) {
-            throw new Exception("[Guard Alert] Điều kiện không thỏa mãn: " + currentState + " -> " + event);
+            throw new Exception("[Guard Alert] Trạng thái không cho phép: " + currentState + " -> " + event);
         }
 
         try {
-            // 3. Execute Action & Capture Output
+            // 3. Validation Check (Nghiệp vụ sâu)
+            transition.action().validate(ctx);
+
+            // 4. Execute Action & Capture Output
             Object output = transition.action().execute(ctx);
 
             // 4. Per-Step Outbox
