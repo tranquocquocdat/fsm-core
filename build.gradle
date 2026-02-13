@@ -7,7 +7,10 @@ plugins {
 
 group = 'com.yourcompany'
 version = '1.0.0'
-sourceCompatibility = '17'
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 
 repositories {
     mavenCentral()
@@ -20,8 +23,7 @@ dependencyManagement {
 }
 
 dependencies {
-    // Chỉ phụ thuộc vào các module tối thiểu của Spring
-    implementation 'org.springframework:spring-tx'
+    // Only depends on minimal Spring modules
     implementation 'org.springframework:spring-context'
     implementation 'org.springframework.boot:spring-boot-autoconfigure'
 
@@ -32,11 +34,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
-// Tắt bootJar vì đây là thư viện
-tasks.named('bootJar') {
-    enabled = false
-}
-
+// This is a library, not a Spring Boot application
 tasks.named('jar') {
     enabled = true
     archiveClassifier = ''

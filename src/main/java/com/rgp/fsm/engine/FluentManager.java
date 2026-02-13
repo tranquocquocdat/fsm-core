@@ -5,7 +5,6 @@ import com.rgp.fsm.core.TransitionContext;
 import com.rgp.fsm.core.BaseCommand;
 import com.rgp.fsm.core.OutboxProducer;
 import com.rgp.fsm.core.StateHistoryProcessor;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +15,8 @@ public class FluentManager<S, E> {
         this.transitions = transitions;
     }
 
-    @Transactional(rollbackFor = Exception.class)
+    // Note: This class is NOT a Spring-managed bean, so @Transactional won't work here.
+    // Wrap calls to fire() in a @Transactional method in your own Spring @Service instead.
     public StepResult<S> fire(String aggregateId, Integer version, S currentState, E event, Map<String, Object> params) throws Exception {
         // 1. Tìm bước chuyển
         var transition = transitions.stream()
@@ -53,11 +53,18 @@ public class FluentManager<S, E> {
             return new StepResult<>(transition.to(), output);
 
         } catch (Exception ex) {
-            // 6. THỰC THI HOÀN TÁC (Chỉ chạy nếu được cấu hình tường minh)
+            // 6. Undo (only runs if explicitly configured)
             if (transition.undoAction() != null) {
-                transition.undoAction().execute(ctx);
+                transition.undoAction().accept(ctx);
             } else if (transition.callUndo()) {
-                transition.action().undo(ctx); // Gọi hàm undo() mặc định của chính Command đó
+                transition.action().undo(ctx);
+            }
+
+            // 7. Error Outbox
+            if (transition.errorOutboxProducer() != null && transition.errorEventToEmit() != null) {
+                Object errorPayload = (transition.errorPayloadBuilder() != null)
+                    ? transition.errorPayloadBuilder().apply(ctx) : params;
+                transition.errorOutboxProducer().persist(aggregateId, transition.errorEventToEmit(), errorPayload);
             }
             
             if (transition.errorState() != null) {

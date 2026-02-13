@@ -16,6 +16,6 @@ public record Transition<S, E>(
     String errorEventToEmit,
     java.util.function.Function<TransitionContext<S, E>, Object> errorPayloadBuilder,
     Predicate<TransitionContext<S, E>> guard,
-    BaseCommand<S, E> undoAction, // Đã có Generic
+    UndoAction<S, E> undoAction,
     boolean callUndo
 ) {}

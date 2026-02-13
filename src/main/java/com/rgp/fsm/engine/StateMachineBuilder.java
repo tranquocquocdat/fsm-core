@@ -1,8 +1,11 @@
+package com.rgp.fsm.engine;
+
 import java.util.ArrayList;
 import java.util.List;
 import com.rgp.fsm.core.Transition;
 import com.rgp.fsm.core.TransitionContext;
 import com.rgp.fsm.core.BaseCommand;
+import com.rgp.fsm.core.UndoAction;
 import com.rgp.fsm.core.OutboxProducer;
 import com.rgp.fsm.core.StateHistoryProcessor;
 
@@ -28,7 +31,7 @@ public class StateMachineBuilder<S, E> {
         
         // Error Config
         private S errorState;
-        private BaseCommand<S, E> undoAction;
+        private UndoAction<S, E> undoAction;
         private boolean callUndo; // Cờ hiệu kích hoạt undo
         private OutboxProducer errorOutboxProducer;
         private String errorEventToEmit;
@@ -67,9 +70,9 @@ public class StateMachineBuilder<S, E> {
                 return this;
             }
 
-            public TransitionBuilder and() { return TransitionBuilder.this; }
+            public StateMachineBuilder<S, E> and() { return TransitionBuilder.this.and(); }
             public ErrorConfigurator ifError() { return new ErrorConfigurator(); }
-            public StateMachineBuilder<S, E> buildTransition() { return and().and(); }
+            public StateMachineBuilder<S, E> buildTransition() { return and(); }
         }
 
         public class ErrorConfigurator {
@@ -80,13 +83,13 @@ public class StateMachineBuilder<S, E> {
 
             // Gọi hàm undo() mặc định của Command
             public ErrorConfigurator undo() {
-                this.callUndo = true;
+                TransitionBuilder.this.callUndo = true;
                 return this;
             }
 
-            // Định nghĩa logic undo mới bằng Lambda/Command
-            public ErrorConfigurator undo(BaseCommand<S, E> action) {
-                this.undoAction = action;
+            // Define custom undo logic via Lambda
+            public ErrorConfigurator undo(UndoAction<S, E> action) {
+                TransitionBuilder.this.undoAction = action;
                 return this;
             }
 
@@ -103,9 +106,9 @@ public class StateMachineBuilder<S, E> {
                 return this;
             }
 
-            public TransitionBuilder and() { return TransitionBuilder.this; }
+            public StateMachineBuilder<S, E> and() { return TransitionBuilder.this.and(); }
             public SuccessConfigurator ifSuccess() { return new SuccessConfigurator(); }
-            public StateMachineBuilder<S, E> buildTransition() { return and().and(); }
+            public StateMachineBuilder<S, E> buildTransition() { return and(); }
         }
 
         public StateMachineBuilder<S, E> and() {

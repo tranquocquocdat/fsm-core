@@ -1,3 +1,7 @@
+package com.rgp.fsm.core;
+
+import java.util.Map;
+
 public record TransitionContext<S, E>(
     String aggregateId,      // ID của đơn hàng/giao dịch
     Integer version,         // Version hiện tại (Optimistic Locking)
