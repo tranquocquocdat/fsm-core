@@ -34,6 +34,15 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
+// Enable JUnit 5 test discovery
+tasks.named('test') {
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'failed', 'skipped'
+        showStandardStreams = false
+    }
+}
+
 // This is a library, not a Spring Boot application
 tasks.named('jar') {
     enabled = true
